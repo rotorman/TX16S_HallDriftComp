@@ -20,6 +20,6 @@ Via TX16S AUX2/USART6 you can expect human readable periodic output of the IMU s
 Temp.: 24.98 deg C, AccXYZ: 2.21 -3.55 9.17, GyroXYZ: 0.04, -0.11, -0.04
 ```
 
-The units are temperature in degrees Celsius, linear acceleration in m/s<sup>2</sup>, rotational acceleration in rad/s.
+The units are temperature in degrees Celsius, linear acceleration in m/s<sup>2</sup>, rotational speed in rad/s.
 
 A brief press on the power button turns on the radio, a press longer than 1 second, turns the radio off again.
