@@ -15,7 +15,7 @@ Hookup between RadioMaster TX16S AUX1 port and Adafruit LSM6DS33 breakout board:
 * TX16S AUX1 5V - Adafruit LSM6DS33 VIN
 * TX16S AUX1 GND - Adafruit LSM6DS33 GND
 
-Via TX16S AUX2/USART6 you can expect human readable output of the IMU such as (an example line):
+Via TX16S AUX2/USART6 you can expect human readable periodic output of the IMU such as (an example line):
 ```
 Temp.: 24.98 deg C, AccXYZ: 2.21 -3.55 9.17, GyroXYZ: 0.04, -0.11, -0.04
 ```
