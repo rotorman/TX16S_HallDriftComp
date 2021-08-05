@@ -10,10 +10,10 @@ The source code is to be used with [STM32CubeIDE](https://www.st.com/en/developm
 
 Hookup between RadioMaster TX16S AUX1 port and Adafruit LSM6DS33 breakout board:
 
-* TX16S AUX1 RX - 
-* TX16S AUX1 TX - 
-* TX16S AUX1 5V - 
-* TX16S AUX1 GND - 
+* TX16S AUX1 RX - Adafruit LSM6DS33 SDA
+* TX16S AUX1 TX - Adafruit LSM6DS33 SCL
+* TX16S AUX1 5V - Adafruit LSM6DS33 VIN
+* TX16S AUX1 GND - Adafruit LSM6DS33 GND
 
 Via TX16S AUX2/USART6 you can expect human readable output of the IMU such as (an example line):
 ```
