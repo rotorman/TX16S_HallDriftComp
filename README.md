@@ -6,7 +6,7 @@ An example hookup of [Adafruit LSM6DS33 breakout board](https://www.adafruit.com
 
 <img src="media/TX16S_LSM6DS33_hookup.jpg">
 
-The source code is to be used with [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html). It reconfigures the original serial port USART3 at AUX1 on STM32F429BIT6 to I2C bus (I2C2) and enables the 5V power output of AUX1. Debug output is available at USART6/AUX2 with 400.000 baud 8N1.
+The source code is to be used with [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html). It reconfigures the original serial port USART3 at AUX1 on STM32F429BIT6 to I2C bus (I2C2) and enables the 5V power output of AUX1. Debug output is available at AUX2/USART6 with 400.000 baud 8N1.
 
 Hookup between RadioMaster TX16S AUX1 port and Adafruit LSM6DS33 breakout board:
 
@@ -19,5 +19,7 @@ Via TX16S AUX2/USART6 you can expect human readable periodic output of the IMU s
 ```
 Temp.: 24.98 deg C, AccXYZ: 2.21 -3.55 9.17, GyroXYZ: 0.04, -0.11, -0.04
 ```
+
+The units are temperature in degrees Centigrade, linear acceleration in m/s^2, rotational acceleration in rad/s.
 
 A brief press on the power button turns on the radio, a press longer than 1 second, turns the radio off again.
