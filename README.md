@@ -15,11 +15,11 @@ Hookup between RadioMaster TX16S AUX1 port and Adafruit LSM6DS33 breakout board:
 * TX16S AUX1 5V - Adafruit LSM6DS33 VIN
 * TX16S AUX1 GND - Adafruit LSM6DS33 GND
 
-Via TX16S AUX2/USART6 you can expect human readable periodic output of the IMU and hall sticks (raw 12-bit ADC value). I include in the output also the core temperature of the STM32F429 integrated temperature sensor and Slider1 as non-hall reference. Here is an example line on the second row of the debug output:
+Via TX16S AUX2/USART6 you can expect human readable periodic output of the IMU and hall sticks. I include in the output also the core temperature of the STM32F429 integrated temperature sensor and Slider1 as non-hall reference. Here is an example line on the second row of the debug output:
 ```
 STM32_Temp;Temp;AccX;AccY;AccZ;GyroX;GyroY;GyroZ;LH;LV;RH;RV;Slider1
 33.17;24.93;2.02;-4.17;8.92;0.05;-0.11;-0.04;2180;3290;2080;2106;2041
 ```
-The units are temperature in degrees Celsius, linear acceleration in m/s<sup>2</sup>, angular rate in rad/s, sticks in unitless 12-bit ADC raw output.
+The units are temperature in degrees Celsius, linear acceleration in m/s<sup>2</sup>, angular rate in rad/s, sticks and slider in unitless 12-bit ADC raw output.
 
 A brief press on the power button turns on the radio, a press longer than 1 second, turns the radio off again.
