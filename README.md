@@ -21,5 +21,6 @@ STM32 Core Temp [°C];LSM6DS33 Temp [°C];LH min;LHcurrent;LH Max;LVm;LVc;LHM;RH
 25.24;18.25;636;2187;3449;767;3317;3330;519;2084;3515;465;2119;3414;1403;2077;2623
 ```
 The units are temperature in degrees Celsius, linear acceleration in m/s<sup>2</sup>, angular rate in rad/s, sticks and slider in unitless 12-bit ADC raw output.
+LH = left horizontal stick, LV = left vertical stick, RH/RL the same for right, S1 = slider1.
 
 A brief press on the power button turns on the radio, a press longer than 1 second, turns the radio off again.
