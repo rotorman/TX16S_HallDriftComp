@@ -6,7 +6,7 @@ An example hookup of [Adafruit LSM6DS33 breakout board](https://www.adafruit.com
 
 <img src="media/TX16S_LSM6DS33_hookup.jpg">
 
-The source code is to be used with [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html). It reconfigures the original serial port USART3 at AUX1 on STM32F429BIT6 to I2C bus (I2C2) and enables the 5V power output of AUX1. It samples all 4 stick channels and slider 1 as a non-hall reference as well. Debug output is available at AUX2/USART6 with 400.000 baud 8N1.
+The source code is to be used with [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html). It reconfigures the original serial port USART3 at AUX1 on STM32F429BIT6 to I2C bus (I2C2) and enables the 5V power output of AUX1. It samples all 4 stick channels and slider 1 as a non-hall reference as well. Debug output is available at AUX2/USART6 with 115.200 baud 8N1.
 
 Hookup between RadioMaster TX16S AUX1 port and Adafruit LSM6DS33 breakout board:
 
