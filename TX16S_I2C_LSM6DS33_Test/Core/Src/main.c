@@ -204,8 +204,6 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define TRACE_TIME_FORMAT     "%0.2f "
-#define TRACE_TIME_VALUE      ((float)HAL_GetTick())
 #define CRLF "\r\n"
 
 #define PRINTF_BUFFER_SIZE    128
@@ -215,7 +213,7 @@ void serialPrintf(const char * format, ...)
 	va_list arglist;
 	char tmp[PRINTF_BUFFER_SIZE + 1];
 
-	snprintf(tmp, PRINTF_BUFFER_SIZE, "+%05lums: ", HAL_GetTick());
+	snprintf(tmp, PRINTF_BUFFER_SIZE, "%.3f;", (float)(HAL_GetTick())/1000.0);
 	va_start(arglist, format);
 	vsnprintf(tmp + strlen(tmp), PRINTF_BUFFER_SIZE - strlen(tmp), format, arglist);
 	tmp[PRINTF_BUFFER_SIZE] = '\0';
@@ -226,7 +224,7 @@ void serialPrintf(const char * format, ...)
 }
 
 #define debugPrintf(...) do { serialPrintf(__VA_ARGS__); } while(0)
-#define TRACE(f_, ...)        debugPrintf((TRACE_TIME_FORMAT f_ CRLF), TRACE_TIME_VALUE, ##__VA_ARGS__)
+#define TRACE(f_, ...)        debugPrintf((f_ CRLF), ##__VA_ARGS__)
 
 void TOUCH_AF_INT_Change(void)
 {
@@ -460,7 +458,6 @@ uint32_t ReadAnalogChannel(ADC_HandleTypeDef* hadc, uint32_t ui32Channel)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -504,6 +501,9 @@ int main(void)
   // Turn on UART3 power
   HAL_GPIO_WritePin(UART3Pwr_GPIO_Port, UART3Pwr_Pin, GPIO_PIN_SET);
 
+  // Turn on UART6 power
+  HAL_GPIO_WritePin(UART6pwr_GPIO_Port, UART6pwr_Pin, GPIO_PIN_SET);
+
   HAL_Delay(100);
 
   if (!IMUinit())
@@ -513,13 +513,11 @@ int main(void)
   }
 
 #ifdef WITHACCGYRO
-  TRACE("STM32_T;T;AX;AY;AZ;GX;GY;GZ;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M");
+  TRACE("STM32_T;T;AX;AY;AZ;GX;GY;GZ;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M;VBatt");
 #else
-  TRACE("STM32_T;T;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M");
+  TRACE("STM32_T;T;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M;VBatt");
 #endif
   HAL_Delay(1000);
-  /* USER CODE END 2 */
-
   uint32_t ui32_StickLHmin = 4095;
   uint32_t ui32_StickLVmin = 4095;
   uint32_t ui32_StickRHmin = 4095;
@@ -532,6 +530,7 @@ int main(void)
   uint32_t ui32_Slider1max = 0;
 
   uint8_t ui8_iterator = 0;
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -552,6 +551,13 @@ int main(void)
 		  uint32_t ui32_StickRH = ReadAnalogChannel(&hadc3, ADC_CHANNEL_2);  // ADC3_IN2
 		  uint32_t ui32_StickRV = ReadAnalogChannel(&hadc3, ADC_CHANNEL_3);  // ADC3_IN3
 		  uint32_t ui32_Slider1 = ReadAnalogChannel(&hadc3, ADC_CHANNEL_4);  // ADC3_IN4
+		  uint32_t ui32_VBatt   = ReadAnalogChannel(&hadc3, ADC_CHANNEL_5);  // ADC3_IN5
+
+		  if (ui32_VBatt < 1950) // Low-voltage cut-off at 6.4V
+		  {
+			  HAL_GPIO_WritePin(PWRon_GPIO_Port, PWRon_Pin, GPIO_PIN_RESET); // Turn off power
+			  HAL_Delay(1000);
+		  }
 
 		  if (ui32_StickLH < ui32_StickLHmin) ui32_StickLHmin = ui32_StickLH;
 		  if (ui32_StickLH > ui32_StickLHmax) ui32_StickLHmax = ui32_StickLH;
@@ -577,21 +583,21 @@ int main(void)
 			  ui8_iterator = 0;
 
 #ifdef WITHACCGYRO
-			  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u",
+			  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu",
 		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC, IMUoutput.fAccX, IMUoutput.fAccY, IMUoutput.fAccZ, IMUoutput.fGyroXradps, IMUoutput.fGyroYradps, IMUoutput.fGyroZradps,
 						  ui32_StickLHmin, ui32_StickLH, ui32_StickLHmax,
 						  ui32_StickLVmin, ui32_StickLV, ui32_StickLVmax,
 						  ui32_StickRHmin, ui32_StickRH, ui32_StickRHmax,
 						  ui32_StickRVmin, ui32_StickRV, ui32_StickRVmax,
-						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max);
+						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max, ui32_VBatt);
 #else
-			  TRACE("%.2f;%.2f;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u",
+			  TRACE("%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu",
 		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC,
 						  ui32_StickLHmin, ui32_StickLH, ui32_StickLHmax,
 						  ui32_StickLVmin, ui32_StickLV, ui32_StickLVmax,
 						  ui32_StickRHmin, ui32_StickRH, ui32_StickRHmax,
 						  ui32_StickRVmin, ui32_StickRV, ui32_StickRVmax,
-						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max);
+						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max, ui32_VBatt);
 #endif
 		  }
 	  }
@@ -1129,7 +1135,7 @@ static void MX_USART6_UART_Init(void)
 
   /* USER CODE END USART6_Init 1 */
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 400000;
+  huart6.Init.BaudRate = 115200;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
