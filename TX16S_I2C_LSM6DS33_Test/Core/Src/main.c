@@ -46,6 +46,8 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+//#define WITHACCGYRO
+
 #define ADDR_TS_CAL1 ((uint16_t*) ((uint32_t) 0x1FFF7A2CUL)) /* 30 deg C calibration value @3.3V */
 #define ADDR_TS_CAL2 ((uint16_t*) ((uint32_t) 0x1FFF7A2EUL)) /* 110 deg C calibration value @3.3V */
 
@@ -431,7 +433,7 @@ bool IMUread()
 	IMUoutput.fAccY =  i16_rawAccY * IMUsettings.linacc_mG * GRAVITY_EARTH / 1000.0;
 	IMUoutput.fAccZ =  i16_rawAccZ * IMUsettings.linacc_mG * GRAVITY_EARTH / 1000.0;
 
-	IMUoutput.fTemperatureDegC = i16_rawTemperature / 256.0 + 25.0;
+	IMUoutput.fTemperatureDegC = (float)i16_rawTemperature / 16.0 + 25.0;
 	return true;
 }
 
@@ -510,9 +512,26 @@ int main(void)
 	  asm("bkpt 255");
   }
 
-  TRACE("STM32_Temp;Temp;AccX;AccY;AccZ;GyroX;GyroY;GyroZ;LH;LV;RH;RV;Slider1");
-  HAL_Delay(100);
+#ifdef WITHACCGYRO
+  TRACE("STM32_T;T;AX;AY;AZ;GX;GY;GZ;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M");
+#else
+  TRACE("STM32_T;T;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M");
+#endif
+  HAL_Delay(1000);
   /* USER CODE END 2 */
+
+  uint32_t ui32_StickLHmin = 4095;
+  uint32_t ui32_StickLVmin = 4095;
+  uint32_t ui32_StickRHmin = 4095;
+  uint32_t ui32_StickRVmin = 4095;
+  uint32_t ui32_Slider1min = 4095;
+  uint32_t ui32_StickLHmax = 0;
+  uint32_t ui32_StickLVmax = 0;
+  uint32_t ui32_StickRHmax = 0;
+  uint32_t ui32_StickRVmax = 0;
+  uint32_t ui32_Slider1max = 0;
+
+  uint8_t ui8_iterator = 0;
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -526,7 +545,7 @@ int main(void)
 		  HAL_ADC_Start(&hadc1);
 		  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 		  uint32_t ui32_STM32Temperature = HAL_ADC_GetValue(&hadc1);
-		  float fSTM32TempDegC = (80.0/(float)(*ADDR_TS_CAL2 - *ADDR_TS_CAL1))*(float)(ui32_STM32Temperature - *ADDR_TS_CAL1) + 30.0;
+		  float fSTM32TempDegC = (80.0/(float)(*ADDR_TS_CAL2 - *ADDR_TS_CAL1))*(float)((float)ui32_STM32Temperature - *ADDR_TS_CAL1) + 30.0;
 
 		  uint32_t ui32_StickLH = ReadAnalogChannel(&hadc3, ADC_CHANNEL_0);  // ADC3_IN0
 		  uint32_t ui32_StickLV = ReadAnalogChannel(&hadc3, ADC_CHANNEL_1);  // ADC3_IN1
@@ -534,10 +553,47 @@ int main(void)
 		  uint32_t ui32_StickRV = ReadAnalogChannel(&hadc3, ADC_CHANNEL_3);  // ADC3_IN3
 		  uint32_t ui32_Slider1 = ReadAnalogChannel(&hadc3, ADC_CHANNEL_4);  // ADC3_IN4
 
-		  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%u;%u;%u;%u;%u",
-		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC, IMUoutput.fAccX, IMUoutput.fAccY, IMUoutput.fAccZ, IMUoutput.fGyroXradps, IMUoutput.fGyroYradps, IMUoutput.fGyroZradps,
-						  ui32_StickLH, ui32_StickLV, ui32_StickRH, ui32_StickRV, ui32_Slider1);
+		  if (ui32_StickLH < ui32_StickLHmin) ui32_StickLHmin = ui32_StickLH;
+		  if (ui32_StickLH > ui32_StickLHmax) ui32_StickLHmax = ui32_StickLH;
 
+		  if (ui32_StickLV < ui32_StickLVmin) ui32_StickLVmin = ui32_StickLV;
+		  if (ui32_StickLV > ui32_StickLVmax) ui32_StickLVmax = ui32_StickLV;
+
+		  if (ui32_StickRH < ui32_StickRHmin) ui32_StickRHmin = ui32_StickRH;
+		  if (ui32_StickRH > ui32_StickRHmax) ui32_StickRHmax = ui32_StickRH;
+
+		  if (ui32_StickRV < ui32_StickRVmin) ui32_StickRVmin = ui32_StickRV;
+		  if (ui32_StickRV > ui32_StickRVmax) ui32_StickRVmax = ui32_StickRV;
+
+		  if (ui32_Slider1 < ui32_Slider1min) ui32_Slider1min = ui32_Slider1;
+		  if (ui32_Slider1 > ui32_Slider1max) ui32_Slider1max = ui32_Slider1;
+
+		  ui8_iterator++;
+		  HAL_Delay(50);
+
+
+		  if (ui8_iterator > 20)
+		  {
+			  ui8_iterator = 0;
+
+#ifdef WITHACCGYRO
+			  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u",
+		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC, IMUoutput.fAccX, IMUoutput.fAccY, IMUoutput.fAccZ, IMUoutput.fGyroXradps, IMUoutput.fGyroYradps, IMUoutput.fGyroZradps,
+						  ui32_StickLHmin, ui32_StickLH, ui32_StickLHmax,
+						  ui32_StickLVmin, ui32_StickLV, ui32_StickLVmax,
+						  ui32_StickRHmin, ui32_StickRH, ui32_StickRHmax,
+						  ui32_StickRVmin, ui32_StickRV, ui32_StickRVmax,
+						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max);
+#else
+			  TRACE("%.2f;%.2f;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u",
+		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC,
+						  ui32_StickLHmin, ui32_StickLH, ui32_StickLHmax,
+						  ui32_StickLVmin, ui32_StickLV, ui32_StickLVmax,
+						  ui32_StickRHmin, ui32_StickRH, ui32_StickRHmax,
+						  ui32_StickRVmin, ui32_StickRV, ui32_StickRVmax,
+						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max);
+#endif
+		  }
 	  }
 	  else
 		  TRACE("Failed reading IMU");
@@ -557,8 +613,6 @@ int main(void)
 		  }
 	  }
 	  HAL_GPIO_WritePin(LEDblue_GPIO_Port, LEDblue_Pin, GPIO_PIN_RESET);
-
-	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
