@@ -47,6 +47,7 @@ typedef struct {
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 //#define WITHACCGYRO
+//#define WITHMINMAX
 
 #define ADDR_TS_CAL1 ((uint16_t*) ((uint32_t) 0x1FFF7A2CUL)) /* 30 deg C calibration value @3.3V */
 #define ADDR_TS_CAL2 ((uint16_t*) ((uint32_t) 0x1FFF7A2EUL)) /* 110 deg C calibration value @3.3V */
@@ -212,8 +213,11 @@ void serialPrintf(const char * format, ...)
 {
 	va_list arglist;
 	char tmp[PRINTF_BUFFER_SIZE + 1];
-
+#ifdef WITHMINMAX
 	snprintf(tmp, PRINTF_BUFFER_SIZE, "%.3f;", (float)(HAL_GetTick())/1000.0);
+#else
+	snprintf(tmp, PRINTF_BUFFER_SIZE, "%.0f;", (float)(HAL_GetTick())/1000.0);
+#endif
 	va_start(arglist, format);
 	vsnprintf(tmp + strlen(tmp), PRINTF_BUFFER_SIZE - strlen(tmp), format, arglist);
 	tmp[PRINTF_BUFFER_SIZE] = '\0';
@@ -513,11 +517,20 @@ int main(void)
   }
 
 #ifdef WITHACCGYRO
+#ifdef WITHMINMAX
   TRACE("STM32_T;T;AX;AY;AZ;GX;GY;GZ;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M;VBatt");
 #else
+  TRACE("STM32_T;T;AX;AY;AZ;GX;GY;GZ;LH;LV;RH;RV;S1;VBatt");
+#endif
+#else
+#ifdef WITHMINMAX
   TRACE("STM32_T;T;LHm;LHc;LHM;LVm;LVc;LHM;RHm;RHc;RHM;RVm;RVc;RVM;S1m;S1c;S1M;VBatt");
+#else
+  TRACE("STM32_T;T;LH;LV;RH;RV;S1;VBatt");
+#endif
 #endif
   HAL_Delay(1000);
+#ifdef WITHMINMAX
   uint32_t ui32_StickLHmin = 4095;
   uint32_t ui32_StickLVmin = 4095;
   uint32_t ui32_StickRHmin = 4095;
@@ -530,6 +543,7 @@ int main(void)
   uint32_t ui32_Slider1max = 0;
 
   uint8_t ui8_iterator = 0;
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -553,12 +567,16 @@ int main(void)
 		  uint32_t ui32_Slider1 = ReadAnalogChannel(&hadc3, ADC_CHANNEL_4);  // ADC3_IN4
 		  uint32_t ui32_VBatt   = ReadAnalogChannel(&hadc3, ADC_CHANNEL_5);  // ADC3_IN5
 
-		  if (ui32_VBatt < 1950) // Low-voltage cut-off at 6.4V
+		  float f_VBatt = (float)(ui32_VBatt)*(3.3/4095.0) * ((120+39)/39);
+
+		  //if (ui32_VBatt < 1950) // Low-voltage cut-off at 6.4V
+		  if (f_VBatt < 6.4) // Low-voltage cut-off
 		  {
 			  HAL_GPIO_WritePin(PWRon_GPIO_Port, PWRon_Pin, GPIO_PIN_RESET); // Turn off power
 			  HAL_Delay(1000);
 		  }
 
+#ifdef WITHMINMAX
 		  if (ui32_StickLH < ui32_StickLHmin) ui32_StickLHmin = ui32_StickLH;
 		  if (ui32_StickLH > ui32_StickLHmax) ui32_StickLHmax = ui32_StickLH;
 
@@ -581,25 +599,42 @@ int main(void)
 		  if (ui8_iterator > 20)
 		  {
 			  ui8_iterator = 0;
+#endif
 
 #ifdef WITHACCGYRO
-			  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu",
+#ifdef WITHMINMAX
+			  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%.1f",
 		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC, IMUoutput.fAccX, IMUoutput.fAccY, IMUoutput.fAccZ, IMUoutput.fGyroXradps, IMUoutput.fGyroYradps, IMUoutput.fGyroZradps,
 						  ui32_StickLHmin, ui32_StickLH, ui32_StickLHmax,
 						  ui32_StickLVmin, ui32_StickLV, ui32_StickLVmax,
 						  ui32_StickRHmin, ui32_StickRH, ui32_StickRHmax,
 						  ui32_StickRVmin, ui32_StickRV, ui32_StickRVmax,
-						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max, ui32_VBatt);
+						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max, f_VBatt);
 #else
-			  TRACE("%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu",
+			  TRACE("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%.1f",
+		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC, IMUoutput.fAccX, IMUoutput.fAccY, IMUoutput.fAccZ, IMUoutput.fGyroXradps, IMUoutput.fGyroYradps, IMUoutput.fGyroZradps,
+						  ui32_StickLH, ui32_StickLV, ui32_StickRH, ui32_StickRV, ui32_Slider1, f_VBatt);
+#endif
+#else
+#ifdef WITHMINMAX
+			  TRACE("%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%lu;%.1f",
 		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC,
 						  ui32_StickLHmin, ui32_StickLH, ui32_StickLHmax,
 						  ui32_StickLVmin, ui32_StickLV, ui32_StickLVmax,
 						  ui32_StickRHmin, ui32_StickRH, ui32_StickRHmax,
 						  ui32_StickRVmin, ui32_StickRV, ui32_StickRVmax,
-						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max, ui32_VBatt);
+						  ui32_Slider1min, ui32_Slider1, ui32_Slider1max, f_VBatt);
+#else
+			  TRACE("%.2f;%.2f;%lu;%lu;%lu;%lu;%lu;%.1f",
+		  		  		  fSTM32TempDegC, IMUoutput.fTemperatureDegC,
+						  ui32_StickLH, ui32_StickLV, ui32_StickRH, ui32_StickRV, ui32_Slider1, f_VBatt);
 #endif
+#endif
+#ifdef WITHMINMAX
 		  }
+#else
+		  HAL_Delay(10000); // Measurement every 10 sec.
+#endif
 	  }
 	  else
 		  TRACE("Failed reading IMU");
