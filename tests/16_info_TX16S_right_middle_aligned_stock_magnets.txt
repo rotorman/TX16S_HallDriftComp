@@ -1,0 +1,2 @@
+RH long wire  3rd channel in stream; aileron;  output without magnet: 1548 to 1554; after magnet adjustment with magnet (stick center): 1545
+RV short wire 4th channel in stream; elevator; output without magnet: 1542 to 1545: after magnet adjustment with magnet (stick center): 1546
