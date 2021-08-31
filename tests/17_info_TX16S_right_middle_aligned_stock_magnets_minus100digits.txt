@@ -1,0 +1,2 @@
+RH ch3, aileron,  no magnet: 1550, stick center after magnet adjustment: 1450
+RV ch4, elevator, no magnet: 1540, stick center after magnet adjustment: 1450
