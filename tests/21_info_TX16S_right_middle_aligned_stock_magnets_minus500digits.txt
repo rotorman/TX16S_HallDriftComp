@@ -1,0 +1,2 @@
+RH ch3, aileron,  no magnet: 1552, stick center after magnet adjustment: 1040 (outside radio), 1040 (inside radio)
+RV ch4, elevator, no magnet: 1542, stick center after magnet adjustment: 1038 (outside radio), 1021 (inside radio)
